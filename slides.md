@@ -1,11 +1,11 @@
 ---
 # You can also start simply with 'default'
-theme: seriph
+theme: default
 # random image from a curated Unsplash collection by Anthony
 # like them? see https://unsplash.com/collections/94734566/slidev
 background: https://cover.sli.dev
 # some information about your slides (markdown enabled)
-title: Welcome to Slidev
+title: マイナー言語から学ぶ設計のヒント
 info: |
   ## Slidev Starter Template
   Presentation slides for developers.
@@ -24,9 +24,9 @@ mdc: true
 overviewSnapshots: true
 ---
 
-# Welcome to Slidev
+# マイナー言語から学ぶ<br>設計のヒント
 
-Presentation slides for developers
+堅牢で高品質なアプリケーションを目指して
 
 <div class="pt-12">
   <span @click="$slidev.nav.next" class="px-2 py-1 rounded cursor-pointer" hover="bg-white bg-opacity-10">
@@ -34,44 +34,27 @@ Presentation slides for developers
   </span>
 </div>
 
-<div class="abs-br m-6 flex gap-2">
-  <button @click="$slidev.nav.openInEditor()" title="Open in Editor" class="text-xl slidev-icon-btn opacity-50 !border-none !hover:text-white">
-    <carbon:edit />
-  </button>
-  <a href="https://github.com/slidevjs/slidev" target="_blank" alt="GitHub" title="Open in GitHub"
-    class="text-xl slidev-icon-btn opacity-50 !border-none !hover:text-white">
-    <carbon-logo-github />
-  </a>
-</div>
-
-<!--
-The last comment block of each slide will be treated as slide notes. It will be visible and editable in Presenter Mode along with the slide. [Read more in the docs](https://sli.dev/guide/syntax.html#notes)
--->
-
 ---
 transition: fade-out
 ---
 
-# What is Slidev?
+# Motivation
 
-Slidev is a slides maker and presenter designed for developers, consist of the following features
+アプリケーションの品質担保は永遠のテーマ
 
-- 📝 **Text-based** - focus on the content with Markdown, and then style them later
-- 🎨 **Themable** - themes can be shared and re-used as npm packages
-- 🧑‍💻 **Developer Friendly** - code highlighting, live coding with autocompletion
-- 🤹 **Interactive** - embed Vue components to enhance your expressions
-- 🎥 **Recording** - built-in recording and camera view
-- 📤 **Portable** - export to PDF, PPTX, PNGs, or even a hostable SPA
-- 🛠 **Hackable** - virtually anything that's possible on a webpage is possible in Slidev
-<br>
-<br>
+「高品質なアプリケーション」とはどんなものでしょう？<br>
+品質の定義には様々な観点・意見があるでしょうが、領域を問わず共通認識となる指標はあるはずです。
 
-Read more about [Why Slidev?](https://sli.dev/guide/why)
+- 想定外の挙動が発生しないこと
+- 実装意図が明確で、解釈の余地が限定的であること
 
-<!--
-You can have `style` tag in markdown to override the style for the current page.
-Learn more: https://sli.dev/features/slide-scope-style
--->
+世に数多あるプログラミング言語から、こういったポイントにフォーカスした考え方を知ることで、
+堅牢で高品質なアプリケーションを構築するヒントが見つかるかもしれません。
+
+今回は、Webアプリケーションフロントエンド専用言語「[Elm](https://elm-lang.org/)」にスポットを当ててみます。
+
+- ブラウザ内で動くJavaScriptを生成するAltJS
+- 実質、純粋関数型言語 [Haskell](https://www.haskell.org/) のサブセット
 
 <style>
 h1 {
@@ -85,36 +68,216 @@ h1 {
 }
 </style>
 
-<!--
-Here is another comment.
--->
+---
+transition: slide-up
+---
+
+# 堅牢なアプリケーションとは？
+
+誰もが一度は経験しているはず...
+
+- 突然のランタイムエラー
+  - いつどこで、何が原因で起きたのか？
+  - 私の手元では再現しません...
+
+``` text
+Uncaught TypeError: a is undefined
+```
+
+コードベースが大きくなるにつれ、抜け・漏れ・想定外の発生確率も上がり、事前にすべてを検知・カバーする事も困難になります。
+エラーの原因は __考慮漏れ__ が多いのではないでしょうか。
+
+- バックエンドとの通信結果が想定と異なっていた
+- 「有る」と想定していたデータが、特定のケースでは「無い」
 
 ---
 transition: slide-up
-level: 2
 ---
 
-# Navigation
+# Webフロントエンド専用言語「Elm」
 
-Hover on the bottom-left corner to see the navigation's controls panel, [learn more](https://sli.dev/guide/ui#navigation-bar)
+Webアプリケーションフロントエンドに特化したDSL(Domain Specific Language)
 
-## Keyboard Shortcuts
+https://elm-lang.org/
 
-|     |     |
-| --- | --- |
-| <kbd>right</kbd> / <kbd>space</kbd>| next animation or slide |
-| <kbd>left</kbd>  / <kbd>shift</kbd><kbd>space</kbd> | previous animation or slide |
-| <kbd>up</kbd> | previous slide |
-| <kbd>down</kbd> | next slide |
+## 特徴
 
-<!-- https://sli.dev/guide/animations.html#click-animation -->
-<img
-  v-click
-  class="absolute -bottom-9 -left-7 w-80 opacity-50"
-  src="https://sli.dev/assets/arrow-bottom-left.svg"
-  alt=""
-/>
-<p v-after class="absolute bottom-23 left-45 opacity-30 transform -rotate-10">Here!</p>
+- スコープをWebフロントエンドに限定
+- ランタイムエラーの徹底的な排除
+- 副作用の徹底的な隔離
+
+---
+transition: slide-up
+---
+
+# スコープをWebフロントエンドに限定
+
+できる事は、Webフロントエンドで必要な処理のみ
+
+Webフロントエンド(=ブラウザ内で動くJavaScript)以外の機能を __切り捨てた__
+
+| ユースケース | 実現方法 |
+| ---- | ---- |
+| RDBに接続してクエリを発行したいな | できません |
+| ユーザーにメールを送信したいな | できません |
+| ファイルI/Oはどうやるのかな？ | できません |
+| 並列処理でパフォーマンスを上げたいな | できないったらできないんです |
+
+---
+transition: slide-up
+layout: two-cols-header
+---
+
+# ランタイムエラーの徹底的な排除
+
+コンパイルが通れば、事実上ランタイムエラーが発生しない(※)
+
+ランタイムエラーが発生し得るコードを __書けない__
+
+::left::
+
+- 境界チェック・存在チェックを省略できない
+  - List(配列)の要素取得
+  - Dict(辞書)のキー参照
+- 例外機構が存在しない
+  - 大域脱出できない
+  - エスケープハッチも存在しない
+- ※ランタイムエラーが発生し得るケース
+  - コンパイラのバグ
+  - StackOverflow
+
+::right::
+
+``` elm
+-- list[0]のような記法は存在しない
+List.head : List a -> Maybe a
+List.head [1, 2, 3]  -- Just 1
+List.head []         -- Nothing
+
+-- dict["foo"]のような記法も存在しない
+Dict.get : comparable -> Dict comparable v -> Maybe v
+Dict.get "foo" Dict.empty  -- Nothing
+Dict.fromList [("foo", "bar")]
+    |> Dict.get "foo"  -- Just "bar"
+
+-- どちらのケースも記述しないとコンパイルできない
+type Maybe a
+    = Just a
+    | Nothing  -- unwrap() や panic!() は存在しない
+
+type Result error value
+    = Ok value
+    | Err error  -- unwrap() や panic!() は存在しない
+```
+
+---
+transition: slide-up
+layout: two-cols-header
+---
+
+# 副作用の徹底的な隔離
+
+TEA(The Elm Architecture)による副作用や状態の管理
+
+副作用はすべて Elm Runtime で管理されるため、アプリケーションコードは __常に純粋__
+
+::left::
+
+- 状態変更のトリガーを __宣言__
+  - ボタンをクリック・テキストボックスに入力
+- 発生し得る事実を __宣言__
+  - Modelのプロパティが変化する
+  - HTTP通信が発生する・結果が返ってきた
+  - さらなる副作用が発生する
+- 状態に応じたDOMを __宣言__
+  - Modelに特定のプロパティがある・無い
+  - HTTP通信が成功・失敗した
+
+::right::
+
+<img border="rounded" src="/tea.jpg" alt="">
+
+---
+transition: slide-up
+layout: two-cols-header
+---
+
+# Elmのアプローチ
+
+堅牢なWebアプリケーションフロントエンドを実現するために、選んだことと捨てたもの
+
+## 解決すべきドメインヘフォーカス
+
+::left::
+
+### 手に入れたもの
+
+- コンパクトかつシンプルな言語仕様
+- TEAという完成されたアーキテクチャ
+
+::right::
+
+### トレードオフ
+
+- Web GUI以外では使えない
+- ボイラープレートコードが増える
+
+---
+transition: slide-up
+layout: two-cols-header
+---
+
+# Elmのアプローチ
+
+堅牢なWebアプリケーションフロントエンドを実現するために、選んだことと捨てたもの
+
+## 安全性を何よりも重視
+
+::left::
+
+### 手に入れたもの
+
+- ランタイムエラーからの解放
+- 品質への自信
+
+::right::
+
+### トレードオフ
+
+- 「今は手を抜く」という妥協ができない
+- 冗長な記述が増えがち
+
+---
+transition: slide-up
+layout: two-cols-header
+---
+
+# Elmのアプローチ
+
+堅牢なWebアプリケーションフロントエンドを実現するために、選んだことと捨てたもの
+
+## 純粋性の追求
+
+::left::
+
+### 手に入れたもの
+
+- Immutability
+- Testability
+- Composability
+
+::right::
+
+### トレードオフ
+
+- とっつきやすさ
+
+---
+layout: center
+class: text-center
+---
+
+# より堅牢で高品質なアプリケーションを
 
 ---
 layout: two-cols
