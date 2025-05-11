@@ -5,7 +5,7 @@ theme: default
 # like them? see https://unsplash.com/collections/94734566/slidev
 background: https://cover.sli.dev
 # some information about your slides (markdown enabled)
-title: マイナー言語に学ぶ設計のヒント
+title: ニッチな技術の探訪記
 info: |
   ## Slidev Starter Template
   Presentation slides for developers.
@@ -24,258 +24,33 @@ mdc: true
 overviewSnapshots: true
 ---
 
-# マイナー言語に学ぶ<br>設計のヒント
+# ニッチな技術の探訪記
 
-堅牢で高品質なアプリケーションを目指して
+
 
 <div class="pt-12">
   <span @click="$slidev.nav.next" class="px-2 py-1 rounded cursor-pointer" hover="bg-white bg-opacity-10">
-    Press Space for next page <carbon:arrow-right class="inline"/>
+    迷わず行けよ、行けば分かるさ <carbon:arrow-right class="inline"/>
   </span>
 </div>
 
 ---
-transition: fade-out
----
-
-# Motivation
-
-アプリケーションの品質追求は永遠のテーマ
-
-<v-click>
-
-「優れたアプリケーション」とはどんなものでしょう？<br>
-定義には様々な観点・意見があるでしょうが、領域を問わず共通認識となる指標はあるはずです。
-
-</v-click>
-
-<v-click>
-
-- 堅牢
-  - 想定外の挙動が発生しないこと
-- 高品質
-  - 実装意図が明確で、解釈の余地が限定的であること
-
-</v-click>
-
-<v-click>
-
-世に数多あるプログラミング言語から、こういったポイントにフォーカスした考え方を知ることで、
-堅牢で高品質なアプリケーションを構築するヒントが見つかるかもしれません。
-
-</v-click>
-
-<style>
-h1 {
-  background-color: #2B90B6;
-  background-image: linear-gradient(45deg, #4EC5D4 10%, #146b8c 20%);
-  background-size: 100%;
-  -webkit-background-clip: text;
-  -moz-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  -moz-text-fill-color: transparent;
-}
-</style>
-
----
-transition: slide-up
----
-
-# 堅牢で高品質なアプリケーションとは？
-
-誰もが一度は経験しているはず...
-
-<v-click>
-
-突然のランタイムエラー
-
-``` text
-Uncaught TypeError: a is not a function
-```
-
-</v-click>
-
-<v-click>
-
-- いつどこで、何が原因で起きたのか？
-- 私の手元では再現しません...
-
-</v-click>
-
-<v-click>
-
-エラー原因の大半は <span v-mark.circle.orange="4">考慮漏れ</span> であるものの、
-コードベースが大きくなるにつれ、抜け・漏れ・想定外の発生確率も上がり、事前にすべてを検知・カバーする事も困難になります。
-
-</v-click>
-
-<v-click>
-
-- 外部との通信結果が想定と異なっていた
-- 「有る」と想定していたデータが、特定のケースでは「無い」
-
-</v-click>
-
----
-transition: slide-up
----
-
-# Webフロントエンド専用言語「Elm」
-
-Webアプリケーションフロントエンドに特化したAltJSなDSL
-
-https://elm-lang.org/
-
-<v-click>
-
-## 特徴
-
-1. スコープをWebフロントエンドに限定
-2. ランタイムエラーの徹底的な排除
-3. 副作用の徹底的な隔離
-
-</v-click>
-
----
-transition: slide-up
----
-
-# 1. スコープをWebフロントエンドに限定
-
-できる事は、Webフロントエンドで必要な処理のみ
-
-Webフロントエンド(=ブラウザ内で動くJavaScript)以外の機能を<span v-mark.underline.orange="4">切り捨てた</span>
-
-<v-clicks>
-
-| ユースケース | 実現方法 |
-| ---- | ---- |
-| RDBに接続してクエリを発行したいな | できません |
-| ユーザーにメールを送信するぞ | できません |
-| ファイルI/Oはどうやるのかな？ | できません |
-| 並列処理でパフォーマンスアップじゃい | できないったらできないんです |
-
-</v-clicks>
-
----
-transition: slide-up
 layout: two-cols-header
----
-
-# 2. ランタイムエラーの徹底的な排除
-
-コンパイルが通れば、事実上ランタイムエラーが発生しない(※)
-
-ランタイムエラーが発生し得るコードは<span v-mark.underline.orange="4">書けない</span>
-
-::left::
-
-<v-clicks>
-
-- null/undefinedのような概念が存在しない
-  - 結果が無いことを表す `Maybe(Just/Nothing)`
-  - 成功・失敗を表す `Result(Ok/Err)`
-- 境界チェック・存在チェックを省略できない
-  - List(配列)の要素取得
-  - Dict(辞書)のキー参照
-- 例外機構が存在しない
-  - 大域脱出できない
-  - エスケープハッチも存在しない
-
-</v-clicks>
-
-::right::
-
-<v-click>
-
-``` elm
--- list[0]のような記法は存在しない
-List.head : List a -> Maybe a
-List.head [1, 2, 3]  -- Just 1
-List.head []         -- Nothing
-
--- dict["foo"]のような記法も存在しない
-Dict.get : comparable -> Dict comparable v -> Maybe v
-Dict.get "foo" Dict.empty  -- Nothing
-Dict.fromList [("foo", "bar")]
-    |> Dict.get "foo"      -- Just "bar"
-
--- どちらのケースも記述しないとコンパイルできない
-type Maybe a
-    = Just a
-    | Nothing  -- unwrap() や panic!() は存在しない
-
-type Result error value
-    = Ok value
-    | Err error  -- unwrap() や panic!() は存在しない
-```
-
-</v-click>
-
----
 transition: slide-up
-layout: two-cols-header
 ---
 
-# 3. 副作用の徹底的な隔離
+# 突然のクイズ
 
-TEA(The Elm Architecture)による副作用や状態の管理
-
-副作用はすべて Elm Runtime で管理されるため、アプリケーションコードは<span v-mark.underline.orange="4">常に純粋</span>
-
-::left::
-
-<v-clicks>
-
-- 状態変更のトリガーを宣言
-  - ボタンをクリック・テキストボックスに入力
-  - 一定時間が経過する
-- 発生し得る事象を宣言
-  - アプリケーションの状態(Model)が変化する
-  - HTTP通信が発生する・結果が返ってきた
-  - さらなる副作用が発生する
-- 状態に応じたDOMを宣言
-  - Modelのプロパティが `foo` である
-  - HTTP通信が成功・失敗した
-
-</v-clicks>
-
-::right::
-
-<v-click>
-
-<img border="rounded" src="/tea.jpg" alt="">
-<small>https://kindsonthegenius.com/elm/elm-introduction-to-elm/</small>
-
-</v-click>
-
----
-transition: slide-up
-layout: two-cols-header
----
-
-# Elmのアプローチ
-
-何を選んだのか、あるいは何を選ばなかったのか
-
-<v-click>
-
-- ドメインを明確にし、本質でない概念・機能はすべて削ぎ落とした
-- 安全性に振り切って、できる事を増やすよりもそれぞれの質を磨きこんだ
-- 明確なコンテキストと適切な制約の下で、最大限の自由を提供した
-
-</v-click>
+アイスブレイクというやつかもしれない
 
 ::left::
 
 <v-click>
 
-## 手に入れたもの
+## 2025年は何の年？
 
-- コンパクトかつシンプルな言語仕様
-- TEAという完成されたアーキテクチャ
-- ランタイムエラーからの解放
-- 純粋性(Immutable, Testable, Composable)
+- 令和七年？
+- 万博開催？
 
 </v-click>
 
@@ -283,12 +58,7 @@ layout: two-cols-header
 
 <v-click>
 
-## トレードオフ
-
-- Web GUI以外では使えない
-- 選択肢が少ない
-- 「今は妥協する」作戦がとれない
-- 融通が利かない
+## Linuxデスクトップ元年
 
 </v-click>
 
@@ -296,20 +66,259 @@ layout: two-cols-header
 transition: slide-up
 ---
 
-# マイナー言語「に」学ぶ
+| 西暦 | 和暦 | 界隈 |
+| ---- | ---- | ---- |
+| 2018年 | 平成三十年 | Linuxデスクトップ元年 |
+| 2019年 | 令和元年 | Linuxデスクトップ元年 |
+| 2020年 | 令和二年 | Linuxデスクトップ元年 |
+| 2021年 | 令和三年 | Linuxデスクトップ元年 |
+| 2022年 | 令和四年 | Linuxデスクトップ元年 |
+| 2023年 | 令和五年 | Linuxデスクトップ元年 |
+| 2024年 | 令和六年 | Linuxデスクトップ元年 |
+| 2025年 | 令和七年 | Linuxデスクトップ元年 |
 
-そのエッセンスは、明日からの設計に活かせるかもしれない
+---
+layout: two-cols-header
+transition: slide-up
+---
+
+# Linuxデスクトップの普及状況
 
 <v-click>
 
-- ドメイン(対象領域)に対する、飽くなき思索と洞察
-- 大胆な取捨選択と、徹底的に強固なガードレール
-- 確立された世界観の下で、選んだものの効果を最大限に高める
+控え目に言って大流行
+
+</v-click>
+
+::left::
+
+<v-click>
+
+<img src="/linux-share-graph.png">
+<small>出典: <a href="https://www.qbook.jp/column/1593.html">Qbook【2025年3月版】OSのシェア率ランキング)</a></small>
+
+</v-click>
+
+::right::
+
+<v-click>
+
+- XboxやPlaystationの100倍近いシェア
+- Mac OSと比べても約2倍
+- このまま行けば2100年頃にはシェア100%
 
 </v-click>
 
 ---
-layout: end
+transition: slide-up
+layout: center
 ---
 
-より堅牢で高品質なアプリケーションを
+閑話休題
+
+---
+transition: slide-up
+---
+
+# Linuxデスクトップとは？
+
+主要OSとの比較
+
+<v-click>
+
+## Linuxはあくまで __カーネル__
+
+できる事はハードウェアとの橋渡しやプロセス管理なので、そのままではCLIも便利なGUIも存在しない。
+
+これに主要なソフトウェアを同梱して、便利に使えるようにしたものが __ディストリビューション__ 。<br>
+(Ubuntu, RHEL, Amazon Linux, Alpine Linux, ...etc)
+
+Linuxカーネルに [GNOME](https://www.gnome.org/) や [KDE](https://kde.org/ja/) といった
+「デスクトップ環境(DE)」ソフトウェアを __組み合わせる__ ことで、他OS同様にデスクトップPCとしての利便性を実現している。
+
+ユーザーに自由な選択肢が多数あるので、 ~~ぼくのかんがえたさいきょうのLinuxデスクトップ~~ ニーズに応じた環境を構築できる。
+
+</v-click>
+
+---
+transition: slide-up
+---
+
+# Linuxデスクトップとは？
+
+主要OSとの比較
+
+<v-click>
+
+## Windows/macOSは __GUIありき__ のアーキテクチャ
+
+カーネルとGUIが __密結合__ といえる状態で強く結びついている。
+
+ベンダーが提供するGUI以外の選択肢が実質無いため、細かいことを考えなくて良い反面、ユーザーの自由度が限定的。
+
+そんな中でもGUIをカスタマイズするソフトウェアは存在するが、あくまでベンダーの箱庭にとどまる前提となっている。
+
+</v-click>
+
+---
+transition: slide-up
+---
+
+# Linuxデスクトップとは？
+
+主要OSとの比較
+
+<v-click>
+
+| OS | カーネル | GUI | 結合度 |
+| ---- | ---- | ---- | ---- |
+| Windows | NT Kernel | explorer.exe | 密結合 |
+| macOS | Darwin | Finder | 密結合 |
+| Linux | Linux | 自由(何なら無くても良い) | 疎結合 |
+
+<small>~~アプリケーションで疎結合なアーキテクチャを意識するなら、利用するOSも当然疎結合だよね？~~</small>
+
+</v-click>
+
+---
+layout: two-cols-header
+transition: slide-up
+---
+
+# Linuxの主要デスクトップ環境
+
+多くのディストリビューションで採用
+
+::left::
+
+## GNOME
+
+<img src="/gnome.png" width="90%">
+
+- macOSライクフィールなGUI
+- Ubuntu, RHELなどのデフォルト
+
+
+::right::
+
+## KDE
+
+<img src="/kde.png" width="90%">
+
+- WindowsライクフィールなGUI
+- openSUSEのデフォルト
+
+---
+layout: center
+transition: slide-up
+---
+
+ちょっと待って？「ニッチな技術の探訪記」だよね？
+
+---
+transition: slide-up
+---
+
+# タイル型ウインドウマネージャー
+
+何それおいしいの？
+
+## GNOMEやKDEが提供するもの
+
+デスクトップ利用に必要なもの全部入り
+
+- ウインドウマネージャー
+  - 配置やサイズ変更・移動・装飾など
+- ファイルマネージャー
+  - アプリケーションとしてのExplorer/Finderに相当
+- タスクバー
+- アプリケーションランチャー
+- デスクトップアイコン
+- 標準的なアプリケーション(テキストエディタ、電卓など)
+
+---
+transition: slide-up
+---
+
+# タイル型ウインドウマネージャー
+
+たった1つの責務(SRP)
+
+- ウインドウをタイルのように配置できます
+- (大事な事なのでもう一度)ウインドウをタイルのように配置できます
+
+---
+transition: slide-up
+---
+
+<Youtube id="RQcBqV_GBAw" width="100%" height="100%" />
+
+---
+transition: slide-up
+---
+
+# タイル型ウインドウマネージャー
+
+たった1つの事をうまくやる
+
+<v-click>
+
+## ウインドウの管理
+
+- ウインドウを表示するワークスペースの管理
+- アプリケーションのウインドウを適切に配置
+- 最大化やリサイズ・フローティングなどを切り替え
+
+</v-click>
+
+<v-click>
+
+## 何が嬉しいの？
+
+- ほぼ全ての操作がキーボードだけで完結する
+- ウインドウの調整にわずらわされる事が無い
+- 好きなソフトウェアを組み合わせて利用できる
+
+</v-click>
+
+---
+transition: slide-up
+---
+
+# タイル型ウインドウマネージャー
+
+いっぱいあるよ
+
+<v-click>
+
+- X11
+  - [awesome](https://awesomewm.org/)
+  - [i3](https://i3wm.org/)
+  - [Xmonad](https://xmonad.org/)
+- Wayland
+  - [Hyprland](https://hyprland.org/)
+  - [Sway](https://swaywm.org/)
+
+</v-click>
+
+---
+transition: slide-up
+---
+
+# Linuxデスクトップとは？
+
+いっぱいあるだけが能じゃない
+
+<v-click>
+
+- 選択肢が無数にある
+  - 好きなものを組み合わせて、自分のニーズに合った環境を構築できる
+  - __選ぶ__ という重要な行為の主導権が、常にユーザー側にある
+- コンピューターの根源的な仕組みが学べる
+  - OSってそもそも何だろう？どうやって動いてるんだろう？
+  - 自分のやりたい事はどうやれば実現できるんだろう？
+- 純粋に楽しい
+  - 縦に掘れば、自分の主戦場を支えるレイヤーの知識が身につく
+  - 横に広げれば、異なる思想や文化・哲学に触れられる
+
+</v-click>
